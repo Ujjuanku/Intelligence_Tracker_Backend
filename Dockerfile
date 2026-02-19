@@ -18,5 +18,9 @@ COPY . .
 EXPOSE 8000
 
 # Run the application
-# Run the application (Shell form to allow variable expansion)
-CMD /bin/sh -c "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
+# Copy startup script
+COPY start.sh .
+RUN chmod +x start.sh
+
+# Run the application using the script
+CMD ["./start.sh"]
