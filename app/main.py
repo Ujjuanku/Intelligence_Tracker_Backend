@@ -23,17 +23,53 @@ async def lifespan(app: FastAPI):
     # Shutdown
     await engine.dispose()
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(lifespan=lifespan)
 
-# Mount static files
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+# Add CORS for Vercel Frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify Vercel URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# Templates
-templates = Jinja2Templates(directory="app/templates")
+# ... (Existing mount and templates) ...
 
-# --- Routes ---
+# --- JSON API Endpoints for Vercel Frontend ---
 
+@app.get("/api/competitors")
+async def get_competitors_api(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Competitor).order_by(Competitor.created_at.desc()))
+    return result.scalars().all()
+
+@app.get("/api/history/{competitor_id}")
+async def get_history_api(competitor_id: int, db: AsyncSession = Depends(get_db)):
+    # Get Competitor
+    result = await db.execute(select(Competitor).filter(Competitor.id == competitor_id))
+    competitor = result.scalar_one_or_none()
+    if not competitor:
+        raise HTTPException(status_code=404, detail="Competitor not found")
+
+    # Get Snapshots
+    result = await db.execute(
+        select(Snapshot)
+        .filter(Snapshot.competitor_id == competitor_id)
+        .order_by(Snapshot.timestamp.desc())
+        .limit(20)
+    )
+    snapshots = result.scalars().all()
+    
+    return {
+        "competitor": competitor,
+        "snapshots": snapshots
+    }
+
+# --- Existing Routes ---
 @app.get("/", response_class=HTMLResponse)
+# ... existing home route ...
 async def home(request: Request, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Competitor).order_by(Competitor.created_at.desc()))
     competitors = result.scalars().all()
