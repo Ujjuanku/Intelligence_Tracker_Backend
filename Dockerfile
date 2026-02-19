@@ -17,10 +17,5 @@ COPY . .
 # Expose port
 EXPOSE 8000
 
-# Run the application
-# Copy startup script
-COPY start.sh .
-RUN chmod +x start.sh
-
-# Run the application using the script
-CMD ["./start.sh"]
+# Run the application using the python script
+CMD ["python", "run.py"]
