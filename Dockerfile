@@ -2,20 +2,20 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies (needed for some python packages or potential debugging)
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for caching
+# Copy requirements first (better layer caching)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application
+# Copy project files
 COPY . .
 
-# Expose port
+# Expose port (Railway maps it automatically)
 EXPOSE 8000
 
-# Run the application using the python script
-CMD ["python", "run.py"]
+# IMPORTANT: Use sh -c so $PORT expands correctly
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port $PORT"]
