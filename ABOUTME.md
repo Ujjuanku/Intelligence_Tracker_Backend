@@ -1,8 +1,8 @@
 # About Me
 
-**Name**: [Your Name Here]
-**Role**: Senior Backend Engineer
-**Resume**: [Link to your Resume/LinkedIn]
+**Name**: Ujjwal Jha
+**Role**: Gen AI Developer
+**LinkedIn**: [Ujjwal Jha](https://www.linkedin.com/in/ujjwal-jha-8937b6218/)
 
 ## Resume Summary
 
