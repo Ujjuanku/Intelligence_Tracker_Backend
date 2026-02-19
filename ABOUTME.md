@@ -2,6 +2,7 @@
 
 **Name**: [Your Name Here]
 **Role**: Senior Backend Engineer
+**Resume**: [Link to your Resume/LinkedIn]
 
 ## Resume Summary
 

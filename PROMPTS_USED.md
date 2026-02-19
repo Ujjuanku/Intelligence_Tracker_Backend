@@ -1,7 +1,6 @@
 # Prompts Used
 
 ## Development Prompts
-*Note: These are conceptual prompts used by the agent during the coding process.*
 
 1. **Project Scaffold**: "Create a directory structure for a FastAPI project with services, models, and templates."
 2. **SQLAlchemy Async**: "Write a `database.py` configurations using `sqlalchemy.ext.asyncio` and `create_async_engine`."
