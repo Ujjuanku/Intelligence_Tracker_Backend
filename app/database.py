@@ -12,6 +12,8 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres
 if DATABASE_URL.startswith("postgresql://"):
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
 
+print(f"DEBUG: Connecting to Database URL starting with: {DATABASE_URL[:25]}...")
+
 engine = create_async_engine(DATABASE_URL, echo=True)
 
 async_session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)

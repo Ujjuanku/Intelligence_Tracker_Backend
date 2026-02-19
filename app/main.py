@@ -27,6 +27,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(lifespan=lifespan)
 
+# Mount static files
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+# Templates
+templates = Jinja2Templates(directory="app/templates")
+
 # Add CORS for Vercel Frontend
 app.add_middleware(
     CORSMiddleware,
