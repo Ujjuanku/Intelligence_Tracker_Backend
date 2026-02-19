@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-actions">
+    <div>
+        <h1>Dashboard</h1>
+        <p class="subtitle">Track and analyze competitor pricing and product changes.</p>
+    </div>
+</div>
+
+<div class="card">
+    <form action="/competitors" method="post" class="add-form" style="display: flex; gap: 1rem;">
+        <input type="text" name="url" placeholder="https://stripe.com/pricing" required>
+        <button type="submit" class="btn btn-primary">Add Competitor</button>
+    </form>
+</div>
+
+<div class="grid">
+    {% for competitor in competitors %}
+    <div class="card competitor-card">
+        <div class="comp-header">
+            <div class="comp-domain">{{ competitor.name }}</div>
+            <a href="{{ competitor.url }}" target="_blank" class="comp-url">{{ competitor.url }}</a>
+        </div>
+
+        <div class="comp-stats">
+            <span>Added {{ competitor.created_at.strftime('%Y-%m-%d') }}</span>
+            <span>All Checks</span>
+        </div>
+
+        <div class="comp-actions">
+            <!-- Check Form -->
+            <form action="/check/{{ competitor.id }}" method="post" onsubmit="showLoading(this)">
+                <button type="submit" class="btn btn-primary btn-sm" style="width: 100%">
+                    <span class="btn-text">Check Now</span>
+                </button>
+            </form>
+            <a href="/history/{{ competitor.id }}" class="btn btn-secondary btn-sm" style="text-align: center;">View
+                History</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    function showLoading(form) {
+        const btn = form.querySelector('button');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Checking...';
+    }
+</script>
+{% endblock %}

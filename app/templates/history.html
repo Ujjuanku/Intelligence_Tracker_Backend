@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header-actions">
+    <div>
+        <h1>{{ competitor.name }}</h1>
+        <p class="subtitle">History Report</p>
+    </div>
+    <a href="/" class="btn btn-secondary">← Back to Dashboard</a>
+</div>
+
+<div class="snapshot-list">
+    {% if snapshots %}
+    {% for snap in snapshots %}
+    <!-- Change Logic for Badge -->
+    {% set change_lines = snap.diff_json.lines_added_count + snap.diff_json.lines_removed_count %}
+    {% set status_class = 'change-none' %}
+    {% set status_text = 'No Changes' %}
+    {% set badge_class = 'status-none' %}
+
+    {% if change_lines > 0 and change_lines < 10 %} {% set status_class='change-minor' %} {% set
+        status_text='Minor Updates' %} {% set badge_class='status-minor' %} {% elif change_lines>= 10 %}
+        {% set status_class = 'change-major' %}
+        {% set status_text = 'Major Updates' %}
+        {% set badge_class = 'status-major' %}
+        {% endif %}
+
+        <div class="card snapshot-card {{ status_class }}">
+            <div class="snapshot-header" onclick="toggleSnapshot(this)">
+                <div class="snapshot-meta">
+                    <span class="status-badge {{ badge_class }}">{{ status_text }}</span>
+                    <span class="timestamp">{{ snap.timestamp.strftime('%B %d, %Y at %H:%M') }}</span>
+                </div>
+                <span class="toggle-icon">▼</span>
+            </div>
+
+            <div class="snapshot-body {% if loop.first %}open{% endif %}">
+                {% if snap.ai_summary %}
+                <div class="insights-grid" id="summary-{{ snap.id }}" data-content="{{ snap.ai_summary | e }}">
+                    <!-- JS fills this -->
+                </div>
+                {% endif %}
+
+                {% if snap.diff_json and change_lines > 0 %}
+                <div class="diff-section">
+                    <div class="diff-toggle">
+                        <button class="btn btn-secondary btn-sm" onclick="toggleDiff(this)">Show Raw Diff ({{
+                            change_lines }} lines)</button>
+                    </div>
+                    <div class="raw-diff">
+                        {% if snap.diff_json.added %}
+                        <div class="diff-chunk">
+                            {% for line in snap.diff_json.added.split('\n') %}
+                            <span class="diff-line diff-add">+ {{ line }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% if snap.diff_json.removed %}
+                        <div class="diff-chunk">
+                            {% for line in snap.diff_json.removed.split('\n') %}
+                            <span class="diff-line diff-del">- {{ line }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="card" style="text-align: center; padding: 3rem;">
+            <p style="color: var(--text-muted);">No checks yet.</p>
+            <form action="/check/{{ competitor.id }}" method="post">
+                <button type="submit" class="btn btn-primary">Run First Check</button>
+            </form>
+        </div>
+        {% endif %}
+</div>
+
+<script>
+    function toggleSnapshot(header) {
+        const body = header.nextElementSibling;
+        body.classList.toggle('open');
+        header.querySelector('.toggle-icon').style.transform = body.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
+    }
+
+    function toggleDiff(btn) {
+        const diff = btn.parentElement.nextElementSibling;
+        diff.classList.toggle('open');
+        btn.textContent = diff.classList.contains('open') ? 'Hide Raw Diff' : 'Show Raw Diff';
+    }
+
+    // Render JSON Insights
+    document.querySelectorAll('.insights-grid').forEach(el => {
+        try {
+            const data = JSON.parse(el.getAttribute('data-content'));
+            let html = '';
+
+            const renderCard = (title, icon, items, colorClass = '') => {
+                if (!items || items.length === 0) return '';
+                return `
+                <div class="insight-card ${colorClass}">
+                    <div class="insight-title">${icon} ${title}</div>
+                    <div class="insight-content">
+                        <ul>${items.map(i => `<li>${i}</li>`).join('')}</ul>
+                    </div>
+                </div>`;
+            };
+
+            // Order: Pricing, Features, Positioning, Strategy
+            html += renderCard('Pricing Updates', '💰', data.pricing);
+            html += renderCard('Features', '🚀', data.features);
+            html += renderCard('Positioning', '📢', data.positioning);
+
+            if (data.strategy && data.strategy.length) {
+                html += `
+                <div class="insight-card" style="background-color: #f3e8ff; border-color: #d8b4fe; grid-column: 1 / -1;">
+                    <div class="insight-title" style="color: #6b21a8;">🧠 Strategic Implication</div>
+                     <div class="insight-content" style="color: #4c1d95;">
+                        <p>${data.strategy.join(' ')}</p>
+                    </div>
+                </div>`;
+            }
+
+            if (!html) {
+                if (data.message) {
+                    html = `<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted);"><em>${data.message}</em></div>`;
+                } else {
+                    html = `<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted);"><em>No strategic changes detected.</em></div>`;
+                }
+            }
+
+            el.innerHTML = html;
+        } catch (e) {
+            console.error("Parse error", e);
+            el.innerHTML = `<div class="insight-card"><p>Legacy Summary: ${el.getAttribute('data-content')}</p></div>`;
+        }
+    });
+</script>
+{% endblock %}
